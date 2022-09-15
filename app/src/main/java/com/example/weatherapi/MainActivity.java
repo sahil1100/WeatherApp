@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.service.controls.templates.TemperatureControlTemplate;
 import android.util.Log;
@@ -28,10 +29,10 @@ public class MainActivity extends AppCompatActivity {
     EditText editText;
     Button searchbutton;
     TextView temp, longitude, latitude, humidity, sunrise, sunset, pressure, wind, max_temp, min_temp, feels;
-    
-    ApiInterface apiInterface;
-    SharedPreferences sharedPref ;
-    SharedPreferences.Editor editor ;
+     ApiInterface apiInterface;
+    //SharedPreferences sharedPref ;
+    Cursor res;
+   // SharedPreferences.Editor editor ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
         min_temp = findViewById(R.id.min_temp);
         feels = findViewById(R.id.feels);
 
-        sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this);
+
+        //sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
         
         apiInterface = RetrofitInstance.getRetrofit().create(ApiInterface.class);
         final DecimalFormat df = new DecimalFormat("0.00");
@@ -64,28 +67,73 @@ public class MainActivity extends AppCompatActivity {
                 
                 String place = editText.getText().toString();
 
-                if(sharedPref.getAll().containsKey(place)){
+                 res = databaseHelper.getData(place);
+                StringBuffer stringplace = new StringBuffer();
+                StringBuffer stringtemp = new StringBuffer();
+                StringBuffer stringmaxtemp = new StringBuffer();
+                StringBuffer stringmintemp = new StringBuffer();
+                StringBuffer stringfeels = new StringBuffer();
+                StringBuffer stringlat = new StringBuffer();
+                StringBuffer stringlon = new StringBuffer();
+                StringBuffer stringhumidity = new StringBuffer();
+                StringBuffer stringsunrise = new StringBuffer();
+                StringBuffer stringsunset = new StringBuffer();
+                StringBuffer stringpressure = new StringBuffer();
+                StringBuffer stringwindspeed = new StringBuffer();
+                if(res!=null && res.getCount()>0){
+                    while (res.moveToNext()){
+                        stringplace.append(res.getString(1));
+                        stringtemp.append(res.getString(2));
+                        stringmaxtemp.append(res.getString(3));
+                        stringmintemp.append(res.getString(4));
+                        stringfeels.append(res.getString(5));
+                        stringlat.append(res.getString(6));
+                        stringlon.append(res.getString(7));
+                        stringhumidity.append(res.getString(8));
+                        stringsunrise.append(res.getString(9));
+                        stringsunset.append(res.getString(10));
+                        stringpressure.append(res.getString(11));
+                        stringwindspeed.append(res.getString(12));
+                    }
+                }
 
-                    Toast.makeText(MainActivity.this, "Data Fetched from local storage..", Toast.LENGTH_SHORT).show();
-                    String savedata = sharedPref.getString(place,null);
-                    Gson gson = new Gson();
-                    model data1 = gson.fromJson(savedata, model.class);
+                if(stringplace.toString().contains(place)){
 
-                    double tempp = data1.getMain().getTemp() - 273.15;
-                    temp.setText("Temperature\n"+ df.format(tempp) +" °C");
-                    double mintempp = data1.getMain().getTemp() - 273.15;
-                    min_temp.setText("Min Temp\n"+df.format(mintempp)+" °C");
-                    double maxtempp = data1.getMain().getTemp() - 273.15;
-                    max_temp.setText("Max Temp\n"+df.format(maxtempp)+" °C");
-                    double feelslikee = data1.getMain().getFeels_like() - 273.15;
-                    feels.setText(": "+df.format(feelslikee)+" °C");
-                    latitude.setText(": "+data1.getCoord().getLat()+"°  N");
-                    longitude.setText(": "+data1.getCoord().getLon()+"°  E");
-                    humidity.setText(": "+data1.getMain().getHumidity()+" %");
-                    sunrise.setText(": "+data1.getSys().getSunrise());
-                    sunset.setText(": "+data1.getSys().getSunset());
-                    pressure.setText(": "+data1.getMain().getPressure()+" hPa");
-                    wind.setText(": "+data1.getWind().getSpeed()+"  km/h");
+                    Toast.makeText(MainActivity.this, "Data Fetched from database..", Toast.LENGTH_SHORT).show();
+
+                   // String savedata = sharedPref.getString(place,null);
+//                    Gson gson = new Gson();
+//                    model data1 = gson.fromJson(dataa, model.class);
+
+                    temp.setText("Temperature\n"+ stringtemp +" °C");
+                    min_temp.setText("Min Temp\n"+stringmintemp+" °C");
+                    max_temp.setText("Max Temp\n"+stringmaxtemp+" °C");
+                    feels.setText(": "+stringfeels+" °C");
+                    latitude.setText(": "+stringlat+"°  N");
+                    longitude.setText(": "+stringlon+"°  E");
+                    humidity.setText(": "+stringhumidity+" %");
+                    sunrise.setText(": "+stringsunrise);
+                    sunset.setText(": "+stringsunset);
+                    pressure.setText(": "+stringpressure+" hPa");
+                    wind.setText(": "+stringwindspeed+"  km/h");
+
+//                    double tempp = data1.getMain().getTemp() - 273.15;
+//                    temp.setText("Temperature\n"+ df.format(tempp) +" °C");
+//                    double mintempp = data1.getMain().getTemp() - 273.15;
+//                    min_temp.setText("Min Temp\n"+df.format(mintempp)+" °C");
+//                    double maxtempp = data1.getMain().getTemp() - 273.15;
+//                    max_temp.setText("Max Temp\n"+df.format(maxtempp)+" °C");
+//                    double feelslikee = data1.getMain().getFeels_like() - 273.15;
+//                    feels.setText(": "+df.format(feelslikee)+" °C");
+//                    latitude.setText(": "+data1.getCoord().getLat()+"°  N");
+//                    longitude.setText(": "+data1.getCoord().getLon()+"°  E");
+//                    humidity.setText(": "+data1.getMain().getHumidity()+" %");
+//                    sunrise.setText(": "+data1.getSys().getSunrise());
+//                    sunset.setText(": "+data1.getSys().getSunset());
+//                    pressure.setText(": "+data1.getMain().getPressure()+" hPa");
+//                    wind.setText(": "+data1.getWind().getSpeed()+"  km/h");
+
+
 
                 }else {
                     apiInterface.get_weather(place, "0573dc8b7cb73f2272e26656e38c6339").enqueue(new Callback<model>() {
@@ -113,14 +161,19 @@ public class MainActivity extends AppCompatActivity {
                                 pressure.setText(": "+data.getMain().getPressure()+" hPa");
                                 wind.setText(": "+data.getWind().getSpeed()+"  km/h");
 
-                                model modeljson =new model(data.getWeather(), data.getCoord(), data.getMain(), data.getWind(), data.getSys());
+//                                model modeljson =new model(data.getWeather(), data.getCoord(), data.getMain(), data.getWind(), data.getSys());
+//
+//                                Gson gson = new Gson();
+//                                String json = gson.toJson(modeljson);
 
-                                Gson gson = new Gson();
-                                String json = gson.toJson(modeljson);
+                                databaseHelper.insert(place, tempp, mintempp, maxtempp, feelslikee, data.getCoord().getLat(),
+                                         data.getCoord().getLon(), data.getMain().getHumidity(), data.getSys().getSunrise(),
+                                         data.getSys().getSunset(), data.getMain().getPressure(), data.getWind().getSpeed());
 
-                                editor = sharedPref.edit();
-                                editor.putString(place,json);
-                                editor.apply();
+
+//                                editor = sharedPref.edit();
+//                                editor.putString(place,json);
+//                                editor.apply();
 
                             }
                         }
